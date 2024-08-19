@@ -1,0 +1,57 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Sample data for Emp DataFrame
+    val empDF = Seq(
+      (1, 50000, "Alice", 101),
+      (2, 60000, "Bob", 102),
+      (3, 70000, "Charlie", 103),
+      (4, 80000, "David", 104),
+      (5, 90000, "Eve", 105)).toDF("empid", "empsal", "empname", "depid")
+empDF.show()
+    // Sample data for Dept DataFrame (assuming a salary column)
+    val deptDF = Seq(
+      (101, "Sales", 55000),
+      (102, "Marketing", 65000),
+      (103, "IT", 75000),
+      (104, "HR", 85000),
+      (105, "Finance", 95000)
+    ).toDF("deptid", "deptname", "salary")
+deptDF.show()
+    val empWindow = Window.orderBy(desc("empsal"))
+    val deptWindow = Window.orderBy(desc("salary"))
+
+    val top2EmpSalaries = empDF
+      .withColumn("rank", row_number().over(empWindow))
+      .filter($"rank" <= 2)
+      .drop("rank")
+    val top2DeptSalaries = deptDF.withColumn("rank",row_number().over(deptWindow))
+                                 .filter($"rank" <= 2)
+                                  .drop("rank")
+
+    top2EmpSalaries.show()
+    top2DeptSalaries.show()
+  }
+}
