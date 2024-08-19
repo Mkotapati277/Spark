@@ -29,10 +29,13 @@ object Secanriospratice {
     // Create DataFrame
     val df = spark.createDataFrame(data).toDF("TeamA", "TeamB", "won")
     df.show()
+
+// Calculate Wins
     val wins = df.groupBy("won").count()
       .withColumnRenamed("won","TeamName")
       .withColumnRenamed("count","won")
     wins.show()
+
     // Calculate Total Games
     val TeamA = df.groupBy("TeamA").count()
       .withColumnRenamed("TeamA","TeamName")
@@ -44,9 +47,12 @@ object Secanriospratice {
       .withColumnRenamed("count","TotalB")
     TeamB.show()
 
+// Join the DataFrames and calculate the total
     val TotalGames = TeamA.join(TeamB,Seq("TeamName"),"outer").na.fill(0)
       .withColumn("Total",col("TotalA")+ col("TotalB")).drop("TotalA","TotalB")
           TotalGames.show()
+
+ // Calculate Losses
     val loses = TotalGames.join(wins,Seq("TeamName"),"left").na.fill(0)
       .withColumn("Lost",col("Total")-col("won")).select("TeamName","Lost","won")
 
