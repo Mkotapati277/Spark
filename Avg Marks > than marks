@@ -1,0 +1,43 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Sample data
+    val data = Seq(
+      ("a", "english", 99),
+      ("b", "english", 99),
+      ("c", "science", 97),
+      ("c", "english", 98),
+      ("d", "maths", 95),
+      ("e", "science", 93) ).toDF("student_name", "subject", "marks")
+
+    data.show()
+ val avgdf = data.agg(avg("marks")).first().getDouble(0)
+
+    val resdf = data.filter($"marks" > avgdf)
+    resdf.show()
+
+
+    }
+}
