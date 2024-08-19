@@ -1,0 +1,43 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Sample data
+    val data = Seq(
+      (1, "Henry", "henry12@gmail.com"),
+      (2, "Smith", "smith@yahoo.com"),
+      (3, "Martin", "martin221@hotmail.com")
+    ).toDF("id", "name", "email")
+
+    data.show(false)
+
+    val splitdf = data.withColumn("domain",split(col("email"),"@").getItem(1))
+    splitdf.show()
+
+    val resultdf =splitdf.select("id","name","domain")
+    resultdf.show()
+
+
+    }
+}
