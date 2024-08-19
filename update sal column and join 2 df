@@ -1,0 +1,52 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Sample data for EmployeeDetails
+    val employeeDetails = Seq(
+      (121, "John Snow", 321, "01/31/2014", "Toronto"),
+      (321, "Walter White", 986, "01/30/2015", "California"),
+      (421, "Kuldeep Rana", 876, "27/11/2016", "New Delhi")
+    ).toDF("EmpId", "FullName", "ManagerId", "DateOfJoining", "City")
+
+    // Sample data for EmployeeSalary
+    val employeeSalary = Seq(
+      (121, "P1", 8000, 500),
+      (321, "P2", 10000, 1000),
+      (421, "P1", 12000, 0)
+    ).toDF("EmpId", "Project", "Salary", "Variable")
+
+    employeeDetails.show()
+    employeeSalary.show()
+
+    val updatedf = employeeSalary.withColumn("salary",when(col("Empid")===421 ,8000).otherwise(col("salary")))
+    updatedf.show()
+
+    val finaldf = employeeDetails.join(updatedf,Seq("EmpId"),"left").withColumn("salary",col("salary")+col("Variable")).drop("Variable")
+      .select("FullName","salary")
+    finaldf.show()
+
+
+    }
+}
