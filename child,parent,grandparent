@@ -1,0 +1,47 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession, functions => F}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Create a DataFrame with the given data
+    val df = Seq(
+      ("A", "AA"),
+      ("B", "BB"),
+      ("C", "CC"),
+      ("AA", "AAA"),
+      ("BB", "BBB"),
+      ("CC", "CCC")
+    ).toDF("child", "parent")
+df.show()
+    val df1 = df.withColumnRenamed("child","child1").withColumnRenamed("parent","parent1")
+    df1.show()
+
+    val df3 = df1.join(df,df1("parent1")===df("child"),"leftanti")
+    df3.show()
+
+    val df4 = df3.join(df,df3("child1")===df("parent"),"left").drop("child1")
+      .withColumnRenamed("parent1","Grandparent")
+      .select("child","parent","Grandparent")
+    df4.show()
+
+
+  }
+}
