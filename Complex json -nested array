@@ -1,0 +1,85 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession, functions => F}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Define the JSON string
+    val jsonString =""" {
+      "emp": [
+      {
+        "name": "xyz",
+        "id": 123,
+        "address": [
+        {"line1": "hyderabad", "line2": "ind"},
+        {"line1": "hyderabad"},
+        {"line2": "ind"}
+        ]
+      },
+      {
+        "name": "abc",
+        "id": 124,
+        "address": [
+        {"line1": "bng", "line2": "ind"},
+        {"line1": "bng"},
+        {}
+        ]
+      },
+      {
+        "name": "jhon",
+        "id": 125,
+        "address": [
+        {"line1": "bng", "line2": "ind"},
+        {"line1": "bng"},
+        {}
+        ]
+      }
+      ]
+    }"""
+    val jsonrdd = sc.parallelize(Seq(jsonString))
+   val df = spark.read.option("multiline","true").json(jsonrdd)
+    df.show(false)
+    df.printSchema()
+
+    val expdf = df.withColumn("emp",explode(col("emp")))
+    expdf.show(false)
+    expdf.printSchema()
+
+    val expdf1 = expdf.withColumn("emp.address",explode(col("emp.address")))
+   expdf1.show(false)
+    expdf1.printSchema()
+
+    val flattendf = expdf.select("emp.name","emp.id","emp.address.line1","emp.address.line2")
+    flattendf.show(false)
+    flattendf.printSchema()
+
+   /* val newdf1 = flattendf.withColumn("line1",explode(col("line1")))
+    newdf1.show()
+    newdf1.printSchema()
+    val newdf2 = newdf1.withColumn("line2",explode(col("line2")))
+    newdf2.show()
+    newdf2.printSchema()
+
+    val rmnull = newdf2.filter($"line1".isNotNull ||  $"line2".isNotNull)
+    rmnull.show() */
+
+
+  }
+}
