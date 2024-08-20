@@ -1,0 +1,44 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    val data = Seq(
+      ("RIL", Array(1000,1005,1090,1200,1000,900,890)),
+      ("HDFC", Array(890,940,810,730,735,960,980)),
+      ("INFY", Array(1001,902,1000,990,1230,1100,1200))
+    ).toDF("StockId", "PredictedPrice")
+    data.show(false)
+    val expdf = data.withColumn("sessionprice",explode($"PredictedPrice"))
+      .withColumn("sessionindex",monotonically_increasing_id())
+     expdf.show(false)
+ val joinedDF = expdf.as("B1").join(expdf.as("S1"),$"B1.StockId" === $"S1.StockId" && $"B1.sessionindex" < $"S1.sessionindex")
+                   .withColumn("profit",$"S1.sessionprice" - $"B1.sessionprice")
+                   .select($"B1.StockId",$"B1.sessionprice".as("BuyPrice"),$"S1.sessionprice".as("Sellprice"),$"profit")
+    joinedDF.show(false)
+val maxprofit = joinedDF.groupBy("StockId").agg(max("BuyPrice"),max("Sellprice"),max("profit"))
+    maxprofit.show()
+
+
+
+
+    }
+}
