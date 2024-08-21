@@ -1,0 +1,43 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession, functions => F}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.types.{StructType, StructField, IntegerType, StringType}
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Sample data
+    val data = Seq(
+      ("001", "Monika", "Arora", 100000, "2014-02-20 09:00:00", "HR"),
+      ("002", "Niharika", "Verma", 300000, "2014-06-11 09:00:00", "Admin"),
+      ("003", "Vishal", "Singhal", 300000, "2014-02-20 09:00:00", "HR"),
+      ("004", "Amitabh", "Singh", 500000, "2014-02-20 09:00:00", "Admin"),
+      ("005", "Vivek", "Bhati", 500000, "2014-06-11 09:00:00", "Admin")
+    ).toDF("WORKER_ID", "FIRST_NAME", "LAST_NAME", "SALARY", "JOINING_DATE", "DEPARTMENT")
+data.show()
+    val dupsalary = data.groupBy("SALARY").agg(count("*").as("count")).filter($"count" >1 ).select("SALARY")
+    dupsalary.show()
+
+    val res = data.join(dupsalary,Seq("SALARY"))
+    res.show()
+
+
+
+  }
+}
