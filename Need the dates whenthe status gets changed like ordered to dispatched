@@ -1,0 +1,47 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.{Row, SparkSession, functions => F}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.types.{StructType, StructField, IntegerType, StringType}
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Sample data
+    val data = Seq(
+      (1, "1-Jan", "Ordered"),
+      (1, "2-Jan", "dispatched"),
+      (1, "3-Jan", "dispatched"),
+      (1, "4-Jan", "Shipped"),
+      (1, "5-Jan", "Shipped"),
+      (1, "6-Jan", "Delivered"),
+      (2, "1-Jan", "Ordered"),
+      (2, "2-Jan", "dispatched"),
+      (2, "3-Jan", "shipped")).toDF("Order_id", "status_date", "status")
+      data.show()
+    val windowspec = Window.partitionBy("Order_id").orderBy("status_date")
+
+    val newdf = data.withColumn("previous_state",lag($"status",1).over(windowspec))
+    newdf.show()
+
+    val stc = newdf.filter($"status" =!= $"previous_state")
+    stc.show()
+
+
+  }
+}
