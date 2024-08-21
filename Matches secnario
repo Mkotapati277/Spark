@@ -1,0 +1,49 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Row, SparkSession, functions => F}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.types.{StructType, StructField, IntegerType, StringType}
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    val schema = StructType(List(
+      StructField("Emp_Id", IntegerType, nullable = false),
+      StructField("Emp_name", StringType, nullable = false),
+      StructField("Salary", IntegerType, nullable = false),
+      StructField("Manager_Id", IntegerType, nullable = true)))
+    // Create the input DataFrame
+    val data = Seq(
+      (1, "India"),
+      (2, "Australia"),
+      (3, "England"),
+      (4, "New Zealand")
+    ).toDF("Id", "TeamName")
+
+    // Create aliases for the DataFrame
+    val df1 = data.alias("df1")
+    val df2 = data.alias("df2")
+
+val res = df1.crossJoin(df2).filter($"df1.Id" < $"df2.Id")
+              .select(concat_ws(" VS ",$"df1.TeamName",$"df2.TeamName").as("matches"))
+
+    res.show(false)
+
+  }
+}
