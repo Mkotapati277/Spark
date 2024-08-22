@@ -1,0 +1,47 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Row, SparkSession, functions => F}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.types.{StructType, StructField, IntegerType, StringType}
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+    // Create the Seq of data
+    val df = Seq(
+      (4001, 17),
+      (4002, 45),
+      (4003, 65),
+      (4004, 30),
+      (4005, 80)).toDF("id","age")
+      df.show()
+    def catAge(age:Int) ={
+      if (age < 18) "youth"
+      else if (age < 60) "adult"
+      else "senior"
+    }
+    val catAgeUDF = udf(catAge _)
+    // Apply the UDF to create a new column 'AgeGroup'
+    val df1 = df.withColumn("AgeGroup", catAgeUDF($"Age"))
+
+    // Show the DataFrame
+    df1.show()
+
+  }
+}
