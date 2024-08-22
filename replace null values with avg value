@@ -1,0 +1,57 @@
+package pack
+import org.apache.hadoop.hive.ql.exec.UDF
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import scala.io.Source
+import org.apache.spark.sql.types.{HIVE_TYPE_STRING, IntegerType}
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Row, SparkSession, functions => F}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions
+import org.apache.spark.sql.expressions
+import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.types.{StructType, StructField, IntegerType, StringType}
+import org.apache.spark.sql.functions.{coalesce, col, count, dense_rank, exp, expr, monotonically_increasing_id, row_number, sum, to_date, window}
+import org.apache.spark.sql.functions._
+object Secanriospratice {
+  def main(Args:Array[String]):Unit= {
+    println("======Hello=======")
+    val conf = new SparkConf().setAppName("first").setMaster("local[*]")
+      .set("spark.driver.host", "localhost")
+      .set("spark.driver.allowMultipleContexts", "true")
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
+    val spark = SparkSession.builder.getOrCreate()
+    import spark.implicits._
+
+    // Define the schema
+    val schema = StructType(Array(
+      StructField("saleid", StringType, nullable = false),
+      StructField("amount", IntegerType, nullable = true)
+    ))
+
+    // Convert the data to Row format
+    val salesData = Seq(
+      Row("1", 100),
+      Row("2", 150),
+      Row("3", null.asInstanceOf[Integer]),
+      Row("4", 200),
+      Row("5", null.asInstanceOf[Integer])
+    )
+
+    // Create an RDD[Row]
+    val rowRDD = spark.sparkContext.parallelize(salesData)
+
+    // Create DataFrame using the schema
+    val df = spark.createDataFrame(rowRDD, schema)
+
+    // Show the DataFrame
+    df.show()
+
+    val avgdf = df.agg(avg("amount").as("avg")).first().getDouble(0)
+
+    val repdf = df.na.fill(Map("amount"->avgdf))
+    repdf.show()
+    
+  }
+}
